@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Serviços</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e0e6ed;
+            padding: 20px;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 20px auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 82, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 15px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+        .user-info { font-weight: 600; color: #e0e6ed; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+        .cargo-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
+        .cargo-admin { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .cargo-user { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .panel-link { color: #60a5fa; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; transition: color 0.2s; }
+        .panel-link:hover { color: #93c5fd; }
+        
+        h1 { font-size: 24px; color: #e0e6ed; margin-bottom: 5px; }
+        p.subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+
+        .btn-main { padding: 12px 20px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4); }
+        
+        .btn-acao { border: none; border-radius: 6px; padding: 6px 10px; font-weight: 600; font-size: 12px; cursor: pointer; transition: opacity 0.2s; color: white; }
+        .btn-acao:hover { opacity: 0.9; }
+        .btn-iniciar { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .btn-pausar { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-finalizar { background: linear-gradient(135deg, #10b981, #059669); }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(30, 41, 82, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 12px 14px; text-align: left; font-size: 14px; white-space: nowrap; vertical-align: top; }
+        th { background: rgba(15, 23, 42, 0.4); color: #cbd5e1; font-weight: 600; border-bottom: 1px solid rgba(100, 150, 200, 0.2); }
+        td { border-bottom: 1px solid rgba(100, 150, 200, 0.1); color: #cbd5e1; }
+
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+        .badge-pendente { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
+        .badge-pausado { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .badge-rodando { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .badge-finalizado { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+        .timer-display { font-family: 'Courier New', Courier, monospace; font-weight: bold; background: rgba(15, 23, 42, 0.6); padding: 5px 8px; border-radius: 6px; letter-spacing: 1px; color: #e0e6ed; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 1000; }
+        .modal-content { background: #1a1f3a; width: 90%; max-width: 380px; margin: 12% auto; padding: 25px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); position: relative; border: 1px solid rgba(100, 150, 200, 0.2); }
+        .modal-content h3 { margin-top: 0; color: #e0e6ed; margin-bottom: 15px; }
+        .modal-content input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(100, 150, 200, 0.3); border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; background: rgba(30, 41, 82, 0.5); color: #e0e6ed; }
+        .modal-content input:focus { border-color: #60a5fa; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(100, 150, 200, 0.2); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; color: #94a3b8; }
+        .erro-msg { color: #fca5a5; display: none; font-size: 13px; font-weight: 600; margin-top: -10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="user-info">
+                <span id="nomeUsuario">👤 Carregando...</span>
+                <span id="cargoUsuario" class="cargo-badge"></span>
+            </div>
+            <div class="header-actions">
+                <a href="/painel" class="panel-link">📦 Voltar ao Estoque</a>
+            </div>
+        </header>
+
+        <h1>🛠️ Registro de Serviços</h1>
+        <p class="subtitle">Gerenciamento de tempo e motivos de serviço.</p>
+
+        <button class="btn-main" onclick="document.getElementById('modal-servico').style.display='block'">+ Iniciar Serviço</button>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Funcionário</th>
+                        <th>Motivo do Serviço</th>
+                        <th>Tempo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-servicos"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-servico" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="document.getElementById('modal-servico').style.display='none'">✕</button>
+            <h3>🛠️ Abrir Serviço</h3>
+            <input type="text" id="servico-descricao" placeholder="Qual o motivo do serviço?">
+            <span id="erro-servico" class="erro-msg">⚠️ Preencha o motivo</span>
+            <button class="btn-main" style="width: 100%;" onclick="salvarServico()">Salvar e Iniciar</button>
+        </div>
+    </div>
+
+    <div id="modal-pausa" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="fecharModalPausa()">✕</button>
+            <h3>⏸️ Pausar Serviço</h3>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: -10px;">Informe o motivo da pausa:</p>
+            <input type="text" id="pausa-motivo" placeholder="Ex: Horário de almoço, Novo chamado...">
+            <button class="btn-main" style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706);" onclick="confirmarPausa()">Confirmar Pausa</button>
+        </div>
+    </div>
+
+    <div id="modal-finalizar" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="fecharModalFinalizar()">✕</button>
+            <h3>✔️ Finalizar Serviço</h3>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: -10px;">Deixe uma observação de pendência (Opcional):</p>
+            <input type="text" id="finalizar-pendencia" placeholder="Ex: Faltou instalar o roteador X...">
+            <button class="btn-main" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669);" onclick="confirmarFinalizar()">Confirmar Conclusão</button>
+        </div>
+    </div>
+
+    <script>
+        let usuarioLogado = { nome: "", isAdmin: false };
+        let servicos = [];
+        let servicoAcaoId = null;
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text ? text.replace(/[&<>"']/g, m => map[m]) : "";
+        }
+
+        function formatTime(seconds) {
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(Math.floor(seconds % 60)).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        async function toggleTimer(id) {
+            const servico = servicos.find(item => item.id === id);
+            if (!servico) return;
+
+            if (servico.is_running) {
+                servicoAcaoId = id;
+                document.getElementById('pausa-motivo').value = '';
+                document.getElementById('modal-pausa').style.display = 'block';
+            } else {
+                const res = await fetch(`/api/servicos/${id}/iniciar`, { method: 'POST' });
+                if (res.ok) {
+                    await carregarPagina();
+                } else {
+                    alert('❌ Não foi possível iniciar o cronômetro.');
+                }
+            }
+        }
+
+        function fecharModalPausa() {
+            document.getElementById('modal-pausa').style.display = 'none';
+            servicoAcaoId = null;
+        }
+
+        async function confirmarPausa() {
+            const motivo = document.getElementById('pausa-motivo').value.trim() || "Pausa não justificada";
+            if (servicoAcaoId) {
+                const res = await fetch(`/api/servicos/${servicoAcaoId}/pausar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo })
+                });
+                if (res.ok) {
+                    await carregarPagina();
+                } else {
+                    alert('❌ Não foi possível pausar o cronômetro.');
+                }
+            }
+            fecharModalPausa();
+        }
+
+        setInterval(() => {
+            if (!servicos.length) return;
+            const now = Date.now();
+            servicos.forEach((item) => {
+                if (item.is_running && item.horario_inicio) {
+                    const elapsed = Number(item.elapsed_seconds || 0) + Math.floor((now - new Date(item.horario_inicio).getTime()) / 1000);
+                    const el = document.getElementById(`timer-${item.id}`);
+                    if (el) el.innerText = formatTime(elapsed);
+                }
+            });
+        }, 1000);
+
+        setInterval(() => {
+            carregarPagina().catch(() => {});
+        }, 5000);
+
+        async function carregarPagina() {
+            const userRes = await fetch('/api/usuario');
+            usuarioLogado = await userRes.json();
+            document.getElementById('nomeUsuario').innerText = `👤 ${usuarioLogado.nome}`;
+            
+            const cargoBadge = document.getElementById('cargoUsuario');
+            if (usuarioLogado.isAdmin) {
+                cargoBadge.innerText = "Admin";
+                cargoBadge.className = "cargo-badge cargo-admin";
+            } else {
+                cargoBadge.innerText = "Funcionário";
+                cargoBadge.className = "cargo-badge cargo-user";
+            }
+
+            const resServicos = await fetch('/api/servicos');
+            servicos = await resServicos.json();
+            
+            document.getElementById('lista-servicos').innerHTML = servicos.map(s => {
+                const statusNormalizado = (s.status || "Pendente").toLowerCase();
+                const elapsedSeconds = Number(s.elapsed_seconds || 0);
+                const isRunning = Boolean(s.is_running);
+                let displayTime = formatTime(elapsedSeconds);
+                
+                if (isRunning && s.horario_inicio) {
+                    const diffSeconds = Math.floor((Date.now() - new Date(s.horario_inicio).getTime()) / 1000);
+                    displayTime = formatTime(elapsedSeconds + diffSeconds);
+                }
+
+                let badgeClass = "badge-pendente";
+                let statusText = "Pendente";
+
+                if (statusNormalizado === "finalizado") {
+                    badgeClass = "badge-finalizado";
+                    statusText = "Finalizado";
+                } else if (isRunning) {
+                    badgeClass = "badge-rodando";
+                    statusText = "Em Andamento";
+                } else if (elapsedSeconds > 0) {
+                    badgeClass = "badge-pausado";
+                    statusText = "Pausado";
+                }
+
+                let textosExtras = "";
+                if (!isRunning && elapsedSeconds > 0 && s.motivo_pausa && statusNormalizado !== "finalizado") {
+                    textosExtras += `<div style="font-size: 11px; color: #fbbf24; margin-top: 5px; font-style: italic;">Motivo: ${escapeHtml(s.motivo_pausa)}</div>`;
+                }
+                if (statusNormalizado === "finalizado" && s.pendencia) {
+                    textosExtras += `<div style="font-size: 11px; color: #fca5a5; margin-top: 5px; font-style: italic;">⚠️ Pendência: ${escapeHtml(s.pendencia)}</div>`;
+                }
+
+                let botaoAcao = "";
+                if (statusNormalizado !== "finalizado") {
+                    const isDonoOuAdmin = (s.funcionario === usuarioLogado.nome || usuarioLogado.isAdmin);
+                    
+                    if (isDonoOuAdmin) {
+                        const playPauseBtn = isRunning 
+                            ? `<button class="btn-acao btn-pausar" onclick="toggleTimer(${s.id})">⏸️ Pausar</button>`
+                            : `<button class="btn-acao btn-iniciar" onclick="toggleTimer(${s.id})">▶️ Iniciar</button>`;
+                            
+                        botaoAcao = `
+                            <div style="display: flex; gap: 6px;">
+                                ${playPauseBtn}
+                                <button class="btn-acao btn-finalizar" onclick="abrirModalFinalizar(${s.id})">✔️ Finalizar</button>
+                            </div>
+                        `;
+                    } else {
+                        botaoAcao = `<span style="color:#94a3b8; font-size:12px; font-style:italic;">🔒 Apenas o responsável</span>`;
+                    }
+                } else {
+                    botaoAcao = `<span style="color:#64748b; font-size:13px; font-style:italic;">Concluído</span>`;
+                }
+
+                return `
+                <tr>
+                    <td><b>${escapeHtml(s.funcionario)}</b></td>
+                    <td>${escapeHtml(s.descricao_servico)}</td>
+                    <td><span id="timer-${s.id}" class="timer-display">${displayTime}</span></td>
+                    <td>
+                        <span class="badge ${badgeClass}">${statusText}</span>
+                        ${textosExtras}
+                    </td>
+                    <td>${botaoAcao}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function salvarServico() {
+            const descricao = document.getElementById('servico-descricao').value;
+            const erroMsg = document.getElementById('erro-servico');
+
+            if (!descricao.trim()) {
+                erroMsg.style.display = 'block';
+                return;
+            }
+            erroMsg.style.display = 'none';
+
+            const nomeDoFuncionario = usuarioLogado.nome;
+
+            const res = await fetch('/cadastrar-servico', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    funcionario: nomeDoFuncionario, 
+                    descricao_servico: descricao.trim(),
+                    itens_necessarios: "-"
+                })
+            });
+
+            if (res.ok) {
+                document.getElementById('modal-servico').style.display = 'none';
+                document.getElementById('servico-descricao').value = '';
+                carregarPagina();
+            } else {
+                alert("❌ Erro ao registrar serviço no servidor.");
+            }
+        }
+
+        function abrirModalFinalizar(id) {
+            servicoAcaoId = id;
+            document.getElementById('finalizar-pendencia').value = '';
+            document.getElementById('modal-finalizar').style.display = 'block';
+        }
+
+        function fecharModalFinalizar() {
+            document.getElementById('modal-finalizar').style.display = 'none';
+            servicoAcaoId = null;
+        }
+
+        async function confirmarFinalizar() {
+            if (!servicoAcaoId) return;
+            const pendencia = document.getElementById('finalizar-pendencia').value.trim();
+            const id = servicoAcaoId;
+
+            const res = await fetch('/api/finalizar-servico', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, pendencia })
+            });
+
+            if (res.ok) {
+                await carregarPagina();
+            } else {
+                alert("❌ Ocorreu um erro ao atualizar o status do serviço.");
+            }
+            fecharModalFinalizar();
+        }
+
+        // Mantida para não quebrar referências antigas caso algo do sistema ainda aponte pra cá
+        function finalizarServico(id) {
+            abrirModalFinalizar(id);
+        }
+
+        carregarPagina();
+    </script>
+</body>
+</html>

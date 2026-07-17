@@ -1,0 +1,28 @@
+{
+  "name": "projeto-almoxarifado",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "init-db": "node src/init-db.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "backup": "node src/backup.js backup",
+    "restore": "node src/backup.js restore",
+    "backup-list": "node src/backup.js list"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-session": "^1.19.0",
+    "pg": "^8.21.0"
+  }
+}

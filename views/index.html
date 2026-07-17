@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Almoxarifado</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e0e6ed;
+            padding: 20px;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .container { max-width: 750px; margin: 20px auto; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 82, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 15px 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+        .user-info { font-weight: 600; color: #e0e6ed; display: flex; align-items: center; gap: 8px; font-size: 15px; }
+        .cargo-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
+        .cargo-admin { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .cargo-user { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        .senha-link { color: #60a5fa; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; cursor: pointer; transition: color 0.2s; }
+        .senha-link:hover { color: #93c5fd; }
+        .logout-link { color: #f87171; text-decoration: none; font-weight: 600; font-size: 14px; white-space: nowrap; transition: color 0.2s; }
+        .logout-link:hover { color: #fca5a5; }
+        h1 { font-size: 24px; color: #e0e6ed; margin-bottom: 20px; }
+        h2 { color: #cbd5e1; }
+
+        .search-bar {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 200, 0.3);
+            box-sizing: border-box;
+            font-size: 15px;
+            margin-bottom: 15px;
+            background: rgba(30, 41, 82, 0.4);
+            backdrop-filter: blur(8px);
+            color: #e0e6ed;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-bar:focus { border-color: #60a5fa; }
+        .search-bar::placeholder { color: #94a3b8; }
+
+        .admin-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .btn-main { width: 100%; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 0;}
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4); }
+        .btn-secundario { background: linear-gradient(135deg, #64748b, #475569); box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3); }
+        .btn-secundario:hover { background: linear-gradient(135deg, #475569, #334155); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+
+        .card {
+            background: rgba(30, 41, 82, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+        .card h3 { margin: 0 0 8px 0; font-size: 18px; color: #e0e6ed; padding-right: 25px; }
+        .card p { margin: 0 0 16px 0; color: #cbd5e1; font-size: 15px; }
+        .card p b { color: #e0e6ed; font-size: 16px; }
+        .estoque-alerta { color: #fca5a5 !important; font-weight: 800; }
+        .actions { display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; color: white; font-size: 14px; transition: transform 0.2s; }
+        .btn-repor { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-repor:hover { transform: translateY(-2px); }
+        .btn-retirar { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .btn-retirar:hover { transform: translateY(-2px); }
+        .btn-deletar-card { position: absolute; top: 18px; right: 18px; background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; font-weight: bold; padding: 0; line-height: 1; transition: color 0.2s; }
+        .btn-deletar-card:hover { color: #fca5a5; }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(30, 41, 82, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th, td { padding: 14px 18px; text-align: left; font-size: 14px; white-space: nowrap; }
+        th { background: rgba(15, 23, 42, 0.4); color: #cbd5e1; font-weight: 600; border-bottom: 1px solid rgba(100, 150, 200, 0.2); }
+        td { border-bottom: 1px solid rgba(100, 150, 200, 0.1); color: #cbd5e1; }
+
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        .badge-reposicao { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .badge-retirada { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-exclusao { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); z-index: 1000; }
+        .modal-content { background: #1a1f3a; width: 90%; max-width: 360px; margin: 12% auto; padding: 25px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); position: relative; border: 1px solid rgba(100, 150, 200, 0.2); }
+        .modal-content h3 { margin-top: 0; color: #e0e6ed; margin-bottom: 15px; }
+        .modal-content label { display: block; font-size: 14px; font-weight: 600; color: #cbd5e1; margin-bottom: 5px; }
+        .modal-content input, .modal-content select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid rgba(100, 150, 200, 0.3); border-radius: 10px; box-sizing: border-box; font-size: 14px; outline: none; background: rgba(30, 41, 82, 0.5); color: #e0e6ed; }
+        .modal-content input:focus, .modal-content select:focus { border-color: #60a5fa; }
+        .modal-content input::placeholder { color: #94a3b8; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(100, 150, 200, 0.2); border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; color: #94a3b8; transition: background 0.2s; }
+        .close-modal:hover { background: rgba(100, 150, 200, 0.3); }
+        .erro-msg { color: #fca5a5; display: none; font-size: 13px; font-weight: 600; margin-top: -10px; margin-bottom: 15px; }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px; /* Reduz as bordas laterais para ganhar espaço */
+            }
+            
+            header {
+                flex-direction: column; /* Empilha o nome do usuário e os botões */
+                align-items: center;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .user-info {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .header-actions {
+                flex-wrap: wrap; /* Permite que os links desçam para a linha de baixo se não couberem */
+                justify-content: center;
+                gap: 12px;
+            }
+
+            h1 {
+                font-size: 22px;
+                text-align: center;
+            }
+
+            .grid {
+                grid-template-columns: 1fr; /* Força os cards a ficarem em 1 única coluna ocupando 100% da tela */
+            }
+
+            .actions {
+                flex-direction: column; /* Empilha os botões de "Repor" e "Retirar" nos cards */
+            }
+
+            .modal-content {
+                width: 95%; /* Garante que os modais não fiquem cortados nas laterais */
+                padding: 20px;
+                margin: 20% auto;
+            }
+            
+            .admin-actions-grid {
+                grid-template-columns: 1fr; /* Empilha os botões do painel de administrador */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <header>
+            <div class="user-info">
+                <span id="nomeUsuario">👤 Carregando...</span>
+                <span id="cargoUsuario" class="cargo-badge"></span>
+            </div>
+            <div class="header-actions">
+                <a href="/servicos" class="senha-link">🛠️ Serviços</a>
+                <span class="senha-link" onclick="abrirModalSenha()">🔑 Alterar Senha</span>
+                <a href="/logout" class="logout-link">Sair</a>
+            </div>
+        </header>
+
+        <h1>📦 Painel Almoxarifado</h1>
+        <input type="text" id="busca" class="search-bar" placeholder="Buscar item no estoque..." oninput="filtrar()">
+        
+        <div id="painelAdmin" class="admin-actions-grid" style="display: none;">
+            <button class="btn-main" onclick="document.getElementById('modal').style.display='block'">+ Cadastrar Novo Item</button>
+            <button class="btn-main btn-secundario" onclick="document.getElementById('modal-usuario').style.display='block'">👥 Criar Conta Funcionário</button>
+            <button class="btn-main btn-secundario" onclick="abrirGerenciadorUsuarios()">🔑 Gerenciar Usuários</button>
+        </div>
+
+        <div id="lista" class="grid"></div>
+
+        <h2 style="margin-top: 40px; font-size: 20px; color: #e0e6ed;">📋 Últimas Movimentações</h2>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Ação</th>
+                        <th>Quantidade</th>
+                        <th>Responsável</th>
+                        <th>Motivo / Serviço</th>
+                    </tr>
+                </thead>
+                <tbody id="historico"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="document.getElementById('modal').style.display='none'">✕</button>
+            <h3>Novo Item</h3>
+            <input type="text" id="n" placeholder="Nome do produto">
+            <input type="number" id="q" min="1" placeholder="Quantidade inicial">
+            <button class="btn-main" onclick="salvar()">Salvar no Catálogo</button>
+        </div>
+    </div>
+
+    <div id="modal-usuario" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="document.getElementById('modal-usuario').style.display='none'">✕</button>
+            <h3>👥 Cadastrar Funcionário</h3>
+            <input type="text" id="user-nome" placeholder="Nome Completo">
+            <input type="text" id="user-username" placeholder="Nome de Usuário (Login)">
+            <input type="password" id="user-senha" placeholder="Senha de Acesso">
+            
+            <label>Nível de Acesso:</label>
+            <select id="user-role">
+                <option value="false">Funcionário Comum (Apenas Movimentar)</option>
+                <option value="true">Administrador (Controle Total)</option>
+            </select>
+            <span id="erro-usuario" class="erro-msg">⚠️ Preencha todos os campos</span>
+            <button class="btn-main" onclick="cadastrarUsuario()">Criar Acesso</button>
+        </div>
+    </div>
+
+    <div id="modal-ajuste" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="fecharModalAjuste()">✕</button>
+            <h3 id="ajuste-titulo">Movimentar Item</h3>
+            <p id="ajuste-estoque-atual" style="font-size: 14px; color: #64748b; margin-top: -10px; margin-bottom: 20px;"></p>
+            <label>Quantidade:</label>
+            <input type="number" id="ajuste-qtd" min="1" value="1">
+            <label>Motivo / Destino do Serviço:</label>
+            <input type="text" id="ajuste-motivo" placeholder="Ex: Manutenção do rack de redes">
+            <span id="erro-motivo" class="erro-msg">⚠️ Obrigatório especificar um motivo</span>
+            <button class="btn-main" onclick="confirmarAjuste()">Confirmar Registro</button>
+        </div>
+    </div>
+
+    <div id="modal-remover" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="fecharModalRemover()">✕</button>
+            <h3 id="remover-titulo" style="color: #ef4444;">❌ Excluir Produto</h3>
+            <label>Motivo do Descarte / Remoção:</label>
+            <input type="text" id="remover-motivo" placeholder="Ex: Quebrou / Obsoleto">
+            <span id="erro-motivo-remover" class="erro-msg">⚠️ Obrigatório o motivo da exclusão</span>
+            <button class="btn-main" style="background: #ef4444;" onclick="confirmarRemocao()">Confirmar Exclusão</button>
+        </div>
+    </div>
+
+    <div id="modal-senha" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="fecharModalSenha()">✕</button>
+            <h3>🔒 Alterar Minha Senha</h3>
+            <input type="password" id="senha-atual" placeholder="Senha Atual">
+            <input type="password" id="senha-nova" placeholder="Nova Senha">
+            <span id="erro-senha" class="erro-msg">⚠️ Preencha os campos correctamente</span>
+            <button class="btn-main" style="background: #10b981;" onclick="confirmarTrocaSenha()">Atualizar Senha</button>
+        </div>
+    </div>
+
+    <div id="modal-gerenciar-usuarios" class="modal">
+        <div class="modal-content" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <button class="close-modal" onclick="fecharGerenciadorUsuarios()">✕</button>
+            <h3>🔑 Gerenciar Usuários</h3>
+            <div id="lista-usuarios" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let itemSelecionado = null;
+        let itemParaRemoverId = null;
+        let usuarioLogado = { nome: "", isAdmin: false };
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        async function carregar() {
+            const userRes = await fetch('/api/usuario');
+            usuarioLogado = await userRes.json();
+            
+            document.getElementById('nomeUsuario').innerText = `👤 ${usuarioLogado.nome}`;
+            const cargoBadge = document.getElementById('cargoUsuario');
+            
+            if (usuarioLogado.isAdmin) {
+                cargoBadge.innerText = "Admin";
+                cargoBadge.className = "cargo-badge cargo-admin";
+                document.getElementById('painelAdmin').style.display = 'grid';
+            } else {
+                cargoBadge.innerText = "Funcionário";
+                cargoBadge.className = "cargo-badge cargo-user";
+                document.getElementById('painelAdmin').style.display = 'none';
+            }
+
+            const itens = await (await fetch('/api/itens')).json();
+            document.getElementById('lista').innerHTML = itens.map(i => {
+                const alertaClass = i.quantidade < 5 ? 'class="estoque-alerta"' : '';
+                const botaoDeletar = usuarioLogado.isAdmin ? `<button class="btn-deletar-card" title="Excluir Item" onclick="abrirModalRemover(${i.id}, '${i.nome.replace(/'/g, "\\'")}')">✕</button>` : '';
+
+                return `
+                <div class="card item-card" data-nome="${i.nome.toLowerCase()}">
+                    ${botaoDeletar}
+                    <div>
+                        <h3>${escapeHtml(i.nome)}</h3>
+                        <p>Disponível: <b ${alertaClass}>${i.quantidade} un</b></p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-action btn-repor" onclick="abrirAjuste(${i.id}, 'reposicao', ${i.quantidade}, '${i.nome.replace(/'/g, "\\'")}')">Repor</button>
+                        <button class="btn-action btn-retirar" onclick="abrirAjuste(${i.id}, 'retirada', ${i.quantidade}, '${i.nome.replace(/'/g, "\\'")}')">Retirar</button>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            const hist = await (await fetch('/api/historico')).json();
+            document.getElementById('historico').innerHTML = hist.map(h => `
+                <tr>
+                    <td><b>${escapeHtml(h.item)}</b></td>
+                    <td><span class="badge badge-${h.acao.toLowerCase()}">${h.acao}</span></td>
+                    <td>${h.quantidade} un</td>
+                    <td>${escapeHtml(h.usuario)}</td>
+                    <td><span style="color: #64748b; font-style: italic;">${escapeHtml(h.motivo || 'Não informado')}</span></td>
+                </tr>`).join('');
+        }
+
+        async function cadastrarUsuario() {
+            const nomeInput = document.getElementById('user-nome');
+            const usernameInput = document.getElementById('user-username');
+            const senhaInput = document.getElementById('user-senha');
+            const roleSelect = document.getElementById('user-role');
+            const erroMsg = document.getElementById('erro-usuario');
+
+            if(!nomeInput.value.trim() || !usernameInput.value.trim() || !senhaInput.value.trim()) {
+                erroMsg.style.display = 'block';
+                return;
+            }
+            erroMsg.style.display = 'none';
+
+            const payload = {
+                nome: nomeInput.value.trim(),
+                username: usernameInput.value.trim(),
+                senha: senhaInput.value.trim(),
+                isAdmin: roleSelect.value
+            };
+
+            const res = await fetch('/criar-conta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if(res.ok) {
+                alert("🟢 Nova conta registrada no sistema!");
+                document.getElementById('modal-usuario').style.display = 'none';
+                nomeInput.value = ''; usernameInput.value = ''; senhaInput.value = '';
+            } else {
+                alert("❌ Erro ao registrar. O Usuário (login) informado já pode estar em uso.");
+            }
+        }
+
+        function filtrar() {
+            const val = document.getElementById('busca').value.toLowerCase();
+            document.querySelectorAll('.item-card').forEach(c => {
+                c.style.display = c.dataset.nome.includes(val) ? 'flex' : 'none';
+            });
+        }
+
+        function abrirAjuste(id, acao, qtdAtual, nomeItem) {
+            itemSelecionado = { id, acao, qtdAtual };
+            document.getElementById('ajuste-titulo').innerText = acao === 'retirada' ? `🔴 Retirar: ${nomeItem}` : `🟢 Repor: ${nomeItem}`;
+            document.getElementById('ajuste-estoque-atual').innerText = `Quantidade atual em estoque: ${qtdAtual} un`;
+            document.getElementById('ajuste-qtd').value = 1;
+            document.getElementById('ajuste-motivo').value = '';
+            document.getElementById('erro-motivo').style.display = 'none';
+            document.getElementById('modal-ajuste').style.display = 'block';
+        }
+
+        function fecharModalAjuste() {
+            document.getElementById('modal-ajuste').style.display = 'none';
+            itemSelecionado = null;
+        }
+
+        function abrirModalRemover(id, nomeItem) {
+            itemParaRemoverId = id;
+            document.getElementById('remover-titulo').innerText = `❌ Excluir: ${nomeItem}`;
+            document.getElementById('remover-motivo').value = '';
+            document.getElementById('erro-motivo-remover').style.display = 'none';
+            document.getElementById('modal-remover').style.display = 'block';
+        }
+
+        function fecharModalRemover() {
+            document.getElementById('modal-remover').style.display = 'none';
+            itemParaRemoverId = null;
+        }
+
+        function abrirModalSenha() {
+            document.getElementById('senha-atual').value = '';
+            document.getElementById('senha-nova').value = '';
+            document.getElementById('erro-senha').style.display = 'none';
+            document.getElementById('modal-senha').style.display = 'block';
+        }
+
+        function fecharModalSenha() { document.getElementById('modal-senha').style.display = 'none'; }
+
+        async function confirmarTrocaSenha() {
+            const inputAtual = document.getElementById('senha-atual');
+            const inputNova = document.getElementById('senha-nova');
+            const erroMsg = document.getElementById('erro-senha');
+            const senhaAtual = inputAtual.value.trim();
+            const novaSenha = inputNova.value.trim();
+
+            if (senhaAtual === "" || novaSenha === "") {
+                erroMsg.innerText = "⚠️ Preencha todos os campos corretamente";
+                erroMsg.style.display = "block";
+                return;
+            }
+
+            erroMsg.style.display = "none";
+            const resposta = await fetch('/alterar-senha', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `senhaAtual=${encodeURIComponent(senhaAtual)}&novaSenha=${encodeURIComponent(novaSenha)}`
+            });
+
+            if (resposta.ok) {
+                alert("🟢 Senha alterada com sucesso!");
+                fecharModalSenha();
+            } else {
+                erroMsg.innerText = "❌ A senha atual informada está incorreta.";
+                erroMsg.style.display = "block";
+            }
+        }
+
+        async function confirmarRemocao() {
+            if (!itemParaRemoverId) return;
+            const motivoInput = document.getElementById('remover-motivo');
+            const erroMsg = document.getElementById('erro-motivo-remover');
+            const motivo = motivoInput.value.trim();
+
+            if (motivo === "") { erroMsg.style.display = "block"; return; }
+            erroMsg.style.display = "none";
+
+            await fetch('/remover-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${itemParaRemoverId}&motivo=${encodeURIComponent(motivo)}`
+            });
+
+            fecharModalRemover();
+            carregar();
+        }
+
+        async function confirmarAjuste() {
+            if (!itemSelecionado) return;
+            const { id, acao, qtdAtual } = itemSelecionado;
+            let qtd = document.getElementById('ajuste-qtd').value;
+            const motivoInput = document.getElementById('ajuste-motivo');
+            const erroMotivo = document.getElementById('erro-motivo');
+            const motivo = motivoInput.value.trim();
+
+            if (!qtd || isNaN(qtd) || parseInt(qtd) <= 0) {
+                alert("Por favor, insira uma quantidade válida.");
+                return;
+            }
+            qtd = parseInt(qtd);
+
+            if (motivo === "") { erroMotivo.style.display = "block"; return; }
+            erroMotivo.style.display = "none";
+
+            if (acao === 'retirada' && qtd > qtdAtual) {
+                alert(`⚠️ Quantidade solicitada (${qtd} un) é maior que o estoque atual (${qtdAtual} un).\nAjustando ao limite máximo.`);
+                qtd = qtdAtual;
+                if (qtd === 0) { fecharModalAjuste(); return; }
+            }
+
+            await fetch('/ajustar-estoque', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                body: `id=${id}&quantidade=${qtd}&acao=${acao}&motivo=${encodeURIComponent(motivo)}` 
+            });
+            
+            fecharModalAjuste();
+            carregar();
+        }
+
+        async function salvar() {
+            const nome = document.getElementById('n').value;
+            let qtd = document.getElementById('q').value;
+            if (!nome || !qtd || parseInt(qtd) <= 0) return;
+
+            await fetch('/cadastrar-item', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `nome=${nome}&qtd=${qtd}`
+            });
+            document.getElementById('modal').style.display='none';
+            document.getElementById('n').value = '';
+            document.getElementById('q').value = '';
+            carregar();
+        }
+
+        async function abrirGerenciadorUsuarios() {
+            const res = await fetch('/api/usuarios');
+            const usuarios = await res.json();
+
+            const html = usuarios.map(u => `
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="margin: 0 0 5px 0; font-weight: 600; color: #0f172a;">${escapeHtml(u.nome_completo)}</p>
+                        <p style="margin: 0; font-size: 13px; color: #64748b;">@${escapeHtml(u.username)}</p>
+                        <span style="font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 700; ${u.is_admin ? 'background: #fee2e2; color: #991b1b;' : 'background: #e0f2fe; color: #0369a1;'}">${u.is_admin ? 'Admin' : 'Funcionário'}</span>
+                    </div>
+                    <button class="btn-action btn-retirar" onclick="deletarUsuario(${u.id}, '${u.nome_completo.replace(/'/g, "\\'")}')" style="width: auto; padding: 10px 15px; white-space: nowrap;">Deletar</button>
+                </div>
+            `).join('');
+
+            document.getElementById('lista-usuarios').innerHTML = html || '<p style="color: #94a3b8;">Nenhum usuário encontrado</p>';
+            document.getElementById('modal-gerenciar-usuarios').style.display = 'block';
+        }
+
+        function fecharGerenciadorUsuarios() {
+            document.getElementById('modal-gerenciar-usuarios').style.display = 'none';
+        }
+
+        async function deletarUsuario(id, nome) {
+            if (!confirm(`Tem certeza que deseja deletar o usuário "${nome}"?`)) return;
+
+            const res = await fetch('/deletar-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+
+            if (res.ok) {
+                alert("🟢 Usuário deletado com sucesso!");
+                abrirGerenciadorUsuarios();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert("❌ " + (data.erro || "Erro ao deletar usuário."));
+            }
+        }
+
+        carregar();
+    </script>
+</body>
+</html>
