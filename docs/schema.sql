@@ -39,3 +39,4 @@ CREATE TABLE servicos (
     pendencia         TEXT,
     data_criacao      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE servicos ADD COLUMN IF NOT EXISTS logs JSONB NOT NULL DEFAULT '[]';
