@@ -8,6 +8,43 @@ const DB_NAME = process.env.DB_NAME || 'almoxarifado_db';
 const DB_USER = process.env.DB_USER || 'postgres';
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_PORT = process.env.DB_PORT || 5432;
+const DB_PASSWORD = process.env.DB_PASSWORD;
+
+function localizarComandoPostgres(comando) {
+    const variavel = comando === 'pg_dump' ? 'PG_DUMP_PATH' : 'PSQL_PATH';
+    const caminhoConfigurado = process.env[variavel];
+    if (caminhoConfigurado) {
+        return caminhoConfigurado;
+    }
+
+    const diretorioConfigurado = process.env.PG_BIN_DIR;
+    if (diretorioConfigurado) {
+        return path.join(diretorioConfigurado, `${comando}.exe`);
+    }
+
+    if (process.platform === 'win32') {
+        const diretorioPostgres = path.join('C:', 'Program Files', 'PostgreSQL');
+        if (fs.existsSync(diretorioPostgres)) {
+            const versoes = fs.readdirSync(diretorioPostgres, { withFileTypes: true })
+                .filter(item => item.isDirectory())
+                .map(item => item.name)
+                .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+            for (const versao of versoes) {
+                const executavel = path.join(diretorioPostgres, versao, 'bin', `${comando}.exe`);
+                if (fs.existsSync(executavel)) {
+                    return executavel;
+                }
+            }
+        }
+    }
+
+    return comando;
+}
+
+const execOptions = {
+    env: { ...process.env, ...(DB_PASSWORD ? { PGPASSWORD: DB_PASSWORD } : {}) }
+};
 
 if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
@@ -19,10 +56,14 @@ function criarBackup() {
     const filename = `backup-${timestamp}.sql`;
     const filepath = path.join(BACKUP_DIR, filename);
 
-    const command = `pg_dump -U ${DB_USER} -h ${DB_HOST} -p ${DB_PORT} -d ${DB_NAME} > "${filepath}"`;
+    const pgDump = localizarComandoPostgres('pg_dump');
+    const command = `"${pgDump}" -U ${DB_USER} -h ${DB_HOST} -p ${DB_PORT} -d ${DB_NAME} > "${filepath}"`;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, execOptions, (error, stdout, stderr) => {
         if (error) {
+            if (fs.existsSync(filepath)) {
+                fs.unlinkSync(filepath);
+            }
             console.error('❌ Erro ao criar backup:', error.message);
             return;
         }
@@ -57,9 +98,10 @@ function restaurarBackup(filename) {
         return;
     }
 
-    const command = `psql -U ${DB_USER} -h ${DB_HOST} -p ${DB_PORT} -d ${DB_NAME} < "${filepath}"`;
+    const psql = localizarComandoPostgres('psql');
+    const command = `"${psql}" -U ${DB_USER} -h ${DB_HOST} -p ${DB_PORT} -d ${DB_NAME} < "${filepath}"`;
 
-    exec(command, (error, stdout, stderr) => {
+    exec(command, execOptions, (error, stdout, stderr) => {
         if (error) {
             console.error('❌ Erro ao restaurar backup:', error.message);
             return;

@@ -134,6 +134,21 @@ Depois de seguir todos os passos, você pode verificar se está funcionando:
 - **Causa**: Permissões insuficientes
 - **Solução**: Verifique a senha no `.env` ou restaure privilégios do usuário PostgreSQL
 
+### Erro: "pg_dump não é reconhecido"
+- **Causa**: A pasta `bin` do PostgreSQL não está no `PATH` do Windows.
+- **Solução rápida**: O sistema procura automaticamente em `C:\Program Files\PostgreSQL\<versão>\bin`.
+- **Outra opção**: Adicione essa pasta ao `PATH` do Windows ou configure no `.env`:
+  ```env
+  PG_BIN_DIR=C:\Program Files\PostgreSQL\18\bin
+  ```
+
+### Erro: "autenticação do tipo senha falhou"
+- **Causa**: A senha do usuário configurado não está definida ou está incorreta.
+- **Solução**: Informe a senha real do usuário no `.env`:
+  ```env
+  DB_PASSWORD=sua_senha_do_postgres
+  ```
+
 ---
 
 ## 📚 Mais Informações
