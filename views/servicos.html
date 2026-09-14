@@ -134,6 +134,69 @@
 
         .acoes-wrap { display: flex; gap: 5px; flex-wrap: nowrap; align-items: center; }
 
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { margin: 0 auto; }
+            header { padding: 12px 14px; margin-bottom: 18px; align-items: flex-start; }
+            .user-info { font-size: 13px; flex-wrap: wrap; }
+            .panel-link { font-size: 12px; }
+            h1 { font-size: 20px; margin-top: 18px; }
+            .subtitle { font-size: 12px; line-height: 1.45; margin-bottom: 14px; }
+            .btn-main { padding: 10px 14px; font-size: 13px; }
+
+            .table-wrap {
+                margin-top: 12px;
+                background: transparent;
+                border: 0;
+                box-shadow: none;
+                overflow: visible;
+            }
+            table, tbody, tr, td { display: block; width: 100%; }
+            thead { display: none; }
+            tbody tr {
+                background: rgba(30,41,82,0.5);
+                border: 1px solid rgba(100,150,200,0.2);
+                border-radius: 12px;
+                margin-bottom: 10px;
+                padding: 8px 12px;
+            }
+            tbody tr td {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 10px;
+                min-height: 36px;
+                padding: 7px 0;
+                text-align: left;
+                font-size: 12px;
+                border-bottom: 1px solid rgba(100,150,200,0.08);
+            }
+            tbody tr td > * { min-width: 0; max-width: calc(100% - 82px); text-align: left; }
+            tbody tr td::before {
+                flex: 0 0 72px;
+                color: #64748b;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+            tbody tr td:nth-child(1)::before { content: 'Funcionário'; }
+            tbody tr td:nth-child(2)::before { content: 'Motivo'; }
+            tbody tr td:nth-child(3)::before { content: 'Tempo'; }
+            tbody tr td:nth-child(4)::before { content: 'Status'; }
+            tbody tr td:nth-child(5)::before { content: 'Ações'; }
+            tbody tr td:last-child { border-bottom: 0; }
+            .td-func, .td-motivo { white-space: normal; overflow: visible; text-overflow: clip; max-width: none; }
+            .td-func b, .td-motivo { overflow-wrap: anywhere; word-break: break-word; }
+            .td-motivo { cursor: pointer; overflow-wrap: anywhere; }
+            .timer-display { font-size: 12px; padding: 3px 6px; }
+            .acoes-wrap { justify-content: flex-start; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 82px); }
+            .btn-acao { min-height: 32px; padding: 6px 9px; font-size: 11px; }
+            .vazio { display: block; padding: 24px 8px; text-align: center; }
+            .vazio::before { content: none; }
+            .modal-content { width: calc(100% - 20px); margin: 12% auto; padding: 20px; border-radius: 16px; }
+        }
+
         /* ── Modais ── */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; }
         .modal-content {
